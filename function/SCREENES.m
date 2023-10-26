@@ -39,9 +39,7 @@ for iter = 1:itn
     InArg.y = [real(FidNus);imag(FidNus)];
     ymax = max(InArg.y);
     InArg.y = InArg.y./ymax;
-    % profile on
-    x = l1_ls(InArg);
-    % profile viewer
+    x = tnipm(InArg);
     x = x*ymax;
     xc = x(1:length(x)/2)+1i*x(length(x)/2+1:end);
     [ X_Symetric ] = Vec2Sym2DPer( xc,N1 );

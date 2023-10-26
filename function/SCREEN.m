@@ -35,7 +35,7 @@ InArg.xn = N1*N2*2;
 ymax = max(InArg.y);
 InArg.y = InArg.y./ymax;
 
-x = l1_ls(InArg);
+x = tnipm(InArg);
 x = x * ymax;
 xc = x(1:length(x)/2)+1i*x(length(x)/2+1:end);
 final_spectrum=reshape(xc,N1,N2);
