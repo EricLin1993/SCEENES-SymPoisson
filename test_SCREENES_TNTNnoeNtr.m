@@ -45,26 +45,9 @@ figure,contour(ppm1,ppm2,Rec_X_Symetric,linspace(0.003,1,50));
 set (gca,'xdir','reverse','ydir','reverse','box','on','linewidth',1.5,'fontsize',14,'fontname','Calibri','fontweight','bold');
 title('SCREENES Reconstruction')
 
-%% diagonal peak analysis
-RecS = real(Rec_X_Symetric)./max(max(real(Rec_X_Symetric))); % normalization
-IdeS = real(Spec2D_Ideal)./max(max(real(Spec2D_Ideal)));
-[pks,locs,w,p]=findpeaks(diag(RecS),'minpeakheight',0.05); % find diagonal peaks
-bnd1 = floor(locs-w/2);bnd2 = ceil(locs+w/2); % find diagonal peak range
-
-for it =1:length(locs) % compute peak intensity
-   IdeS_diagPInt(it) = sum(sum(IdeS(bnd1(it):bnd2(it),bnd1(it):bnd2(it))));
-   RecS_diagPInt(it) = sum(sum(RecS(bnd1(it):bnd2(it),bnd1(it):bnd2(it))));
-end
-
-sl = max(IdeS_diagPInt)*1.1;
-Dia_lx =polyfit(IdeS_diagPInt,RecS_diagPInt,1); % curve fitting
-figure,plot(IdeS_diagPInt,RecS_diagPInt,'o','MarkerFaceColor','b','MarkerEdgeColor','b'), xlim([0,sl]), ylim([0,sl])
-hold on, line([0,sl],[0*Dia_lx(1)+Dia_lx(2),sl*Dia_lx(1)+Dia_lx(2)],'LineWidth',2,'color','b')
-set(gca,'fontsize',12,'linewidth',1.5,'fontweight','bold','fontname','Calibri',...
-    'XColor',[0 0 1],'YColor',[0 0 1],'ZColor',[0 0 1])
-title('DiagnolPeaks Intensity')
-
 %% cross peak analysis
+RecS = real(Rec_X_Symetric)./max(max(real(Rec_X_Symetric)));
+IdeS = real(Spec2D_Ideal)./max(max(real(Spec2D_Ideal)));
 IdePeak = [];
 RecPeak = [];
 [ B ] = BDiagOnes( N1,16 ); % find diagonal peaks area
