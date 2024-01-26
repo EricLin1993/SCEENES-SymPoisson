@@ -1,31 +1,28 @@
 %% Author: Enping Lin, Ze Fang, Bo Chen
 %% Contact: enpinglin@qq.com
-%% Date: 2023-09-30
+%% Date: 2024-01-26
 %% This script is to reproduce statistical analysis result of four sampling schedule
-%% (Random, Sym Random, 2D Poisson and Sym 2D Poisson sampling schedules) by SCREENES, using
-%% a 1H-1H symmetrical spectra NUS data. The fully sampled data corresponds to the 2D 360*360
-%% 1H-1H projection of the 4D TROSY-NOESY-TROSY spectrum of the main protease of SARS-Cov-2.
+%% (Random, Sym Random, 2D Poisson and Sym 2D Poisson sampling schedules) by SCREENES-hard, using
+%% a 15N-15N symmetrical spectra NUS data. 
+%% The spectra data are obtained from the 620×620 fully sampled 15N-15N plane projected data matrix of 
+%% the 3D (H)N(COCO)NH spectrum of a-synuclein.
 %%
 clear,close all,clc
 addpath('data')
 addpath('operator')
 addpath('function')
-load('NNTHaHz.mat')
+load('Ny_Nz.mat')
 
 %% read data
-% smodel = {'ran','sym','2Dpoisson','sympoisson'};
-% lambda = [0.01, 0.0075, 0.005, 0.0025, 0.001];
-% nusr = [0.25, 0.2, 0.15, 0.1, 0.05];
-% testnum = 50;
 smodel = {'ran','sym','2Dpoisson','sympoisson'};
-lambda = [0.0025, 0.001];
-nusr = [0.25, 0.2];
-testnum = 5;
+lambda = [0.01, 0.0075, 0.005, 0.0025, 0.001];
+nusr = [0.25, 0.2, 0.15, 0.1, 0.05];
+testnum = 50;
 rel_tol = 1e-5;
 Rlt_CroRlne = cell(testnum,1);
 
-for it =1:testnum
-	Rlt_CroRlne{it}= zeros(length(lambda),length(nusr),length(smodel));
+for it = 1:testnum
+	Rlt_CroRlne{it} = zeros(length(lambda),length(nusr),length(smodel));
 end
 Rlt_DiaRlne = Rlt_CroRlne;
 
@@ -38,7 +35,7 @@ for itr_test = 1:testnum
             for itr_nusr = 1:length(nusr)                     
                %% NUS sampling
                 [ mask ] = SNUSMask( N1,nusr(itr_nusr),smodel{itr_smodel} ); 
-                Fid=ifft2(Spec2D_Ideal);
+                Fid = ifft2(Spec2D_Ideal);
                 FidNus = Fid;
                 FidNus(mask==0) = [];
                 FidNus = FidNus(:);
@@ -59,10 +56,11 @@ for itr_test = 1:testnum
                 IdeS = real(Spec2D_Ideal)./max(max(real(Spec2D_Ideal)));
                 
                %% diagonal peak analysis
-                [pks,locs,w,p]=findpeaks(diag(RecS),'minpeakheight',0.01); % find diagonal peaks
-                bnd1 = floor(locs-w/2);bnd2 = ceil(locs+w/2); % find diagonal peak range
+                [pks,locs,w,p] = findpeaks(diag(RecS),'minpeakheight',0.01); % find diagonal peaks
+                bnd1 = floor(locs-w/2);
+                bnd2 = ceil(locs+w/2); % find diagonal peak range
                 
-                for it =1:length(locs) % compute peak intensity
+                for it = 1:length(locs) % compute peak intensity
                    IdeS_diagPInt(it) = sum(sum(IdeS(bnd1(it):bnd2(it),bnd1(it):bnd2(it))));
                    RecS_diagPInt(it) = sum(sum(RecS(bnd1(it):bnd2(it),bnd1(it):bnd2(it))));
                 end
@@ -73,12 +71,12 @@ for itr_test = 1:testnum
                %% cross peak analysis
                 IdePeak = [];
                 RecPeak = [];
-                [ B ] = BDiagOnes( N1,10 );
+                [ B ] = BDiagOnes( N1,12 );
                 DiagFlag = logical(  B  );
                 IdeS_RevDiag = IdeS.*(~DiagFlag);
                 RecS_RevDiag = RecS.*(~DiagFlag);
-                bwm = ((IdeS_RevDiag+IdeS_RevDiag.')/2>0.0013);
-                bwm = bwareaopen(bwm,4);
+                bwm = ((IdeS_RevDiag+IdeS_RevDiag.')/2>0.005);
+                bwm = bwareaopen(bwm,1);
                 [L,num] = bwlabel(bwm);
                 
                 for it = 1: num
@@ -108,32 +106,4 @@ Mean_CroRlne = mean(CroRlneArray,4);
 Std_DiaRlne = std(DiaRlneArray,1,4);
 Std_CroRlne = std(CroRlneArray,1,4);
 
-%% show mean statistic
-figure,
-for it = 1:length(smodel)
-  subplot(2,2,it),imshow(squeeze(Mean_DiaRlne(:,:,it)),[0,0.15],'InitialMagnification','fit','border','tight');colorbar
-  xlabel('nusr'),ylabel('lambda'),title(['MeanDia ',smodel{it}])
-  set(gca,'fontsize',12,'fontweight','bold','fontname','Calibri','LineWidth',2) ,colormap('jet')
-end
-
-figure,
-for it = 1:length(smodel)
-  subplot(2,2,it),imshow(squeeze(Mean_CroRlne(:,:,it)),[0,1],'InitialMagnification','fit','border','tight');colorbar
-  xlabel('nusr'),ylabel('lambda'),title(['MeanCro ',smodel{it}])
-  set(gca,'fontsize',12,'fontweight','bold','fontname','Calibri','LineWidth',2) ,colormap('jet')
-end
-
-%% show std statistic
-figure, 
-for it = 1:length(smodel)
-  subplot(2,2,it),imshow(squeeze(Std_DiaRlne(:,:,it)),[0,0.05],'InitialMagnification','fit','border','tight');colorbar
-  xlabel('nusr'),ylabel('lambda'),title(['StdDia ',smodel{it}])
-  set(gca,'fontsize',12,'fontweight','bold','fontname','Calibri','LineWidth',2) ,colormap('jet')
-end
-
-figure, 
-for it = 1:length(smodel)
-  subplot(2,2,it),imshow(squeeze(Std_CroRlne(:,:,it)),[0,0.25],'InitialMagnification','fit','border','tight');colorbar
-  xlabel('nusr'),ylabel('lambda'),title(['StdCro ',smodel{it}])
-  set(gca,'fontsize',12,'fontweight','bold','fontname','Calibri','LineWidth',2) ,colormap('jet')
-end
+save('SCREENES_data.mat','Mean_DiaRlne','Mean_CroRlne','Std_CroRlne','Std_DiaRlne')
